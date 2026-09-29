@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AegisNet 2.0 - Scenario Simulator Controller</title>
+    <style>
+        :root {
+            --bg: #0b1118;
+            --card: #141d26;
+            --border: #1e2c3a;
+            --cyan: #38bdf8;
+            --green: #22c55e;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --gray: #64748b;
+        }
+        body { background: var(--bg); color: #f8fafc; font-family: 'Segoe UI', system-ui; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .control-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 450px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .title { font-size: 18px; font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-group { display: flex; flex-direction: column; gap: 14px; }
+        .sim-btn { padding: 14px; border: 2px solid transparent; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; text-align: left; display: flex; flex-direction: column; }
+        .sim-btn span.desc { font-size: 11px; font-weight: 400; opacity: 0.8; margin-top: 4px; }
+        
+        .btn-normal { background: #162a22; color: var(--green); border-color: #1a4d34; }
+        .btn-normal:hover, .btn-normal.active { background: var(--green); color: black; }
+
+        .btn-fake { background: #332615; color: var(--yellow); border-color: #5c4316; }
+        .btn-fake:hover, .btn-fake.active { background: var(--yellow); color: black; }
+
+        .btn-real { background: #361619; color: var(--red); border-color: #631d22; }
+        .btn-real:hover, .btn-real.active { background: var(--red); color: white; }
+
+        .status-box { margin-top: 20px; padding: 12px; background: #070d13; border: 1px dashed var(--border); border-radius: 4px; font-size: 13px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="control-card">
+        <div class="title">
+            <span>AegisNet Scenarios</span>
+            <span style="font-size: 11px; color: var(--cyan); background: #082f49; padding: 4px 8px; border-radius: 4px;">LIVE CONTROLLER</span>
+        </div>
+
+        <div class="btn-group">
+            <button class="sim-btn btn-normal active" id="btnNormal" onclick="setMode('NORMAL')">
+                NORMAL CONDITION
+                <span class="desc">Ambient values, stable temperature, safe air levels.</span>
+            </button>
+
+            <button class="sim-btn btn-fake" id="btnFake" onclick="setMode('FAKE_ALARM')">
+                FAKE ALARM (TRANSIENT)
+                <span class="desc">&lt; 3 intervals (< 30s) isolated smoke spike; no flame/RoR rise.</span>
+            </button>
+
+            <button class="sim-btn btn-real" id="btnReal" onclick="setMode('REAL_ALARM')">
+                REAL ALARM (CORROBORATED)
+                <span class="desc">&gt; 3 intervals sustained critical heat slope + gas + flame IR.</span>
+            </button>
+        </div>
+
+        <div class="status-box">
+            Current Active Scenario: <b id="activeModeText" style="color: var(--green);">NORMAL</b>
+        </div>
+    </div>
+
+    <script>
+        async function setMode(mode) {
+            try {
+                const res = await fetch('/api/simulation/mode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: mode })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    updateActiveBtn(data.active_mode);
+                }
+            } catch (err) {
+                console.error("Failed to switch mode", err);
+            }
+        }
+
+        function updateActiveBtn(mode) {
+            document.getElementById('btnNormal').classList.remove('active');
+            document.getElementById('btnFake').classList.remove('active');
+            document.getElementById('btnReal').classList.remove('active');
+
+            const textEl = document.getElementById('activeModeText');
+            textEl.innerText = mode;
+
+            if (mode === 'NORMAL') {
+                document.getElementById('btnNormal').classList.add('active');
+                textEl.style.color = 'var(--green)';
+            } else if (mode === 'FAKE_ALARM') {
+                document.getElementById('btnFake').classList.add('active');
+                textEl.style.color = 'var(--yellow)';
+            } else if (mode === 'REAL_ALARM') {
+                document.getElementById('btnReal').classList.add('active');
+                textEl.style.color = 'var(--red)';
+            }
+        }
+
+        // Poll mode sync on load
+        fetch('/api/simulation/mode')
+            .then(r => r.json())
+            .then(d => updateActiveBtn(d.active_mode));
+    </script>
+</body>
+</html>

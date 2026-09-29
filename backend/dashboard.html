@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AegisNet - Command Center</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Google Maps JavaScript API with your API key -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD54sZozs5RQIWMN9Qar94H3rJfw932axw&callback=initGoogleMap" async defer></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    html, body {
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      background-color: #0b111b;
+      color: #94a3b8;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP HEADER & MAIN NAV */
+    .top-header {
+      background: #0d1522;
+      border-bottom: 1px solid #162234;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+    .main-nav {
+      display: flex;
+      gap: 6px;
+      background: #111a28;
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid #1a293f;
+    }
+    .main-nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .main-nav-btn.active {
+      background: #1e3a5f;
+      color: #38bdf8;
+      border-color: #2563eb;
+    }
+    .main-nav-btn:hover:not(.active) {
+      color: #f1f5f9;
+      background: #162438;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: #cbd5e1;
+    }
+    .header-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #131d2e;
+      border: 1px solid #1e2f47;
+      padding: 5px 12px;
+      border-radius: 4px;
+      color: #cbd5e1;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    /* SUB NAVIGATION BAR */
+    .sub-bar {
+      background: #090e17;
+      border-bottom: 1px solid #162234;
+      padding: 8px 20px;
+      display: flex;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+    .sub-nav {
+      display: flex;
+      gap: 6px;
+    }
+    .sub-nav-btn {
+      background: #101926;
+      border: 1px solid #1c2b42;
+      color: #94a3b8;
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .sub-nav-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+    .sub-nav-btn:hover:not(.active) {
+      color: #ffffff;
+      background: #162438;
+    }
+
+    /* MAIN CONTENT SPLIT LAYOUT */
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+      padding: 16px 20px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* LEFT PANELS */
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+    }
+    .panel {
+      background: #0f1724;
+      border: 1px solid #19263a;
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+    .panel-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #475569;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* STATUS PANEL ITEMS */
+    .node-card {
+      background: #131d2e;
+      border: 1px solid #1c2b42;
+      border-radius: 4px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .node-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .node-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+    .node-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .tag-offline {
+      background: #1e293b;
+      color: #64748b;
+    }
+    .tag-online {
+      background: #064e3b;
+      color: #34d399;
+    }
+    .tag-standby {
+      background: #1e293b;
+      color: #94a3b8;
+    }
+    .node-readings {
+      font-size: 0.72rem;
+      color: #64748b;
+      line-height: 1.4;
+    }
+    .add-node-btn {
+      width: 100%;
+      background: #111a28;
+      border: 1px dashed #1e2f47;
+      color: #64748b;
+      padding: 7px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .add-node-btn:hover {
+      color: #94a3b8;
+      border-color: #334155;
+    }
+
+    /* DECISION ENGINE PANEL */
+    .engine-metrics {
+      border-bottom: 1px solid #162234;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      margin-bottom: 6px;
+    }
+    .metric-val {
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .confidence-large {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #38bdf8;
+      margin: 4px 0 8px 0;
+    }
+
+    /* 3 STATE BADGES */
+    .decision-states {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .state-box {
+      border: 1px solid #1c2b42;
+      background: #131d2e;
+      color: #475569;
+      text-align: center;
+      padding: 8px 0;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      transition: all 0.3s;
+    }
+    .state-box.active-normal {
+      background: #064e3b;
+      border-color: #10b981;
+      color: #34d399;
+    }
+    .state-box.active-alert {
+      background: #78350f;
+      border-color: #f59e0b;
+      color: #fde68a;
+    }
+    .state-box.active-danger {
+      background: #7f1d1d;
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+
+    /* RIGHT VIEWPORT */
+    .right-viewport {
+      background: #0f1724;
+      border: 1px solid #19263a;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      min-height: 0;
+      height: 100%;
+    }
+    .sub-view {
+      display: none;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      flex: 1;
+    }
+    .sub-view.active {
+      display: flex;
+    }
+
+    /* CAMERA VIEW */
+    .camera-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #070b12;
+      position: relative;
+      min-height: 0;
+    }
+    .camera-feed {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: #070b12;
+      overflow: hidden;
+    }
+    .camera-hud {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      font-family: monospace;
+      color: #38bdf8;
+      z-index: 2;
+    }
+
+    /* GOOGLE MAPS VIEWPORT */
+    .map-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    #spatialMap {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #0b111b;
+    }
+    .map-hud {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      background: rgba(15, 23, 36, 0.9);
+      border: 1px solid #1c2b42;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 0.72rem;
+      backdrop-filter: blur(4px);
+    }
+    .map-hud div {
+      margin-bottom: 3px;
+    }
+
+    /* DYNAMIC INTEGRITY VIEW */
+    .integrity-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 20px;
+      gap: 16px;
+      min-height: 0;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .integrity-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .audit-card {
+      background: #0b111b;
+      border: 1px solid #19263a;
+      border-radius: 4px;
+      padding: 12px 14px;
+    }
+    .audit-card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .audit-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      margin-bottom: 5px;
+    }
+    .audit-row:last-child {
+      margin-bottom: 0;
+    }
+    .audit-val {
+      font-weight: 600;
+      color: #e2e8f0;
+      font-family: monospace;
+    }
+    .log-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #0b111b;
+      border: 1px solid #19263a;
+      border-radius: 4px;
+      padding: 12px 14px;
+      min-height: 200px;
+    }
+    .log-stream {
+      flex: 1;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-top: 6px;
+    }
+    .log-item {
+      display: flex;
+      gap: 10px;
+      padding: 3px 0;
+      border-bottom: 1px solid #131d2e;
+    }
+    .log-time {
+      color: #64748b;
+      flex-shrink: 0;
+    }
+    .log-event {
+      color: #cbd5e1;
+    }
+    .log-event.danger { color: #f87171; }
+    .log-event.alert { color: #fbbf24; }
+    .log-event.normal { color: #34d399; }
+
+    /* DYNAMIC GRAPH VIEW */
+    .graph-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      gap: 12px;
+      min-height: 0;
+      height: 100%;
+    }
+    .chart-box {
+      flex: 1;
+      min-height: 0;
+      background: #0b111b;
+      border: 1px solid #19263a;
+      border-radius: 4px;
+      padding: 10px 14px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .chart-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      flex-shrink: 0;
+    }
+    .canvas-wrapper {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      min-height: 0;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. TOP HEADER & MAIN NAVIGATION -->
+  <header class="top-header">
+    <div class="brand-title">AegisNet -</div>
+
+    <nav class="main-nav">
+      <button class="main-nav-btn active" id="btn-fire" onclick="switchHazard('fire')">FIRE</button>
+      <button class="main-nav-btn" id="btn-flood" onclick="switchHazard('flood')">FLOOD</button>
+      <button class="main-nav-btn" id="btn-pollution" onclick="switchHazard('pollution')">POLLUTION</button>
+      <button class="main-nav-btn" id="btn-industry" onclick="switchHazard('industry')">INDUSTRY</button>
+    </nav>
+
+    <div class="header-right">
+      <div class="header-btn" id="time-display">TIME 🕒 --:--:--</div>
+      <div class="header-btn">👤 Login</div>
+    </div>
+  </header>
+
+  <!-- 2. SUB NAVIGATION BAR -->
+  <div class="sub-bar">
+    <nav class="sub-nav">
+      <button class="sub-nav-btn active" id="sub-camera" onclick="switchSubTab('camera')">CAMERA</button>
+      <button class="sub-nav-btn" id="sub-map" onclick="switchSubTab('map')">Spatial Map</button>
+      <button class="sub-nav-btn" id="sub-report" onclick="switchSubTab('report')">Integrity and Report</button>
+      <button class="sub-nav-btn" id="sub-graph" onclick="switchSubTab('graph')">Graph</button>
+    </nav>
+  </div>
+
+  <!-- 3. MAIN WORKSPACE LAYOUT -->
+  <main class="layout-grid">
+
+    <!-- LEFT COLUMN -->
+    <aside class="left-col">
+
+      <!-- STATUS PANEL -->
+      <section class="panel">
+        <div class="panel-header">STATUS</div>
+
+        <div class="node-card">
+          <div class="node-header">
+            <span class="node-title" id="node1-title">Node 01</span>
+            <span class="node-tag tag-offline" id="node1-status-tag">OFFLINE</span>
+          </div>
+          <div class="node-readings" id="node1-metrics">
+            Temp: --°C | Analog: -- | Humid: --%
+          </div>
+        </div>
+
+        <div class="node-card">
+          <div class="node-header">
+            <span class="node-title">Node 02</span>
+            <span class="node-tag tag-standby">STANDBY</span>
+          </div>
+          <div class="node-readings" id="node2-metrics">
+            Slot 02: Mesh Standby
+          </div>
+        </div>
+
+        <button class="add-node-btn" onclick="alert('Mesh discovery active. Scanning for nearby nodes...')">ADD [+]</button>
+      </section>
+
+      <!-- DECISION ENGINE PANEL -->
+      <section class="panel">
+        <div class="panel-header">DECISION ENGINE</div>
+
+        <div class="engine-metrics">
+          <div class="metric-row">
+            <span id="metric-label-threat">Threat Confidence</span>
+            <span class="metric-val" id="raw-conf-val">0.0%</span>
+          </div>
+          <div class="confidence-large" id="conf-val">0%</div>
+
+          <div class="metric-row">
+            <span id="metric-label-sub">Thermal Rate-of-Rise:</span>
+            <span class="metric-val" id="ror-val">0.00 °C/s</span>
+          </div>
+          <div class="metric-row">
+            <span>State Pattern:</span>
+            <span class="metric-val" id="pattern-val">Awaiting Telemetry</span>
+          </div>
+        </div>
+
+        <div class="panel-header">STATUS INDICATOR</div>
+        <div class="decision-states">
+          <div class="state-box active-normal" id="state-normal">NORMAL</div>
+          <div class="state-box" id="state-alert">ALERT</div>
+          <div class="state-box" id="state-danger">DANGER</div>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- RIGHT VIEWPORT -->
+    <section class="right-viewport">
+
+      <!-- SUB VIEW 1: CAMERA FEED -->
+      <div class="sub-view active" id="view-camera">
+        <div class="camera-container">
+          <div class="camera-hud">
+            <span id="camera-hud-title">OPTICAL VALIDATION // MOTION & FLICKER FIRE DETECTOR</span>
+            <span id="cam-fps">FEED ACTIVE</span>
+          </div>
+          <div class="camera-feed">
+            <img 
+              id="camera-stream-img"
+              src="/api/camera/stream" 
+              alt="Live Camera Feed" 
+              style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB VIEW 2: SPATIAL MAP (GOOGLE MAPS) -->
+      <div class="sub-view" id="view-map">
+        <div class="map-container">
+          <div class="map-hud">
+            <div><strong style="color: #38bdf8;">ACTIVE SECTOR:</strong> AEGIS-GRID-01</div>
+            <div><strong style="color: #cbd5e1;">MAPPED NODES:</strong> 1 Physical / 1 Mesh</div>
+            <div><strong style="color: #10b981;">TELEMETRY:</strong> SYNCHRONIZED</div>
+          </div>
+          <div id="spatialMap"></div>
+        </div>
+      </div>
+
+      <!-- SUB VIEW 3: DYNAMIC INTEGRITY AND REPORT -->
+      <div class="sub-view" id="view-report">
+        <div class="integrity-container">
+          
+          <div class="integrity-grid">
+            <div class="audit-card">
+              <div class="audit-card-title" id="integ-title-1">Edge Hardware Health</div>
+              <div class="audit-row">
+                <span>MCU Controller:</span>
+                <span class="audit-val">ESP32 DevKit</span>
+              </div>
+              <div class="audit-row">
+                <span>Processor State:</span>
+                <span class="audit-val" id="hw-mcu-state" style="color: #64748b;">STANDBY</span>
+              </div>
+              <div class="audit-row">
+                <span id="integ-bus-label">Sensor Bus (I2C/ADC):</span>
+                <span class="audit-val" id="hw-bus-state" style="color: #64748b;">Awaiting Sync</span>
+              </div>
+              <div class="audit-row">
+                <span>Baseline Calib:</span>
+                <span class="audit-val" style="color: #34d399;">Calibrated (1.0x)</span>
+              </div>
+            </div>
+
+            <div class="audit-card">
+              <div class="audit-card-title" id="integ-title-2">Network & Link Ingress</div>
+              <div class="audit-row">
+                <span>Ingress Carrier:</span>
+                <span class="audit-val">Wi-Fi / Mesh Node</span>
+              </div>
+              <div class="audit-row">
+                <span>Link State:</span>
+                <span class="audit-val" id="net-link-state" style="color: #64748b;">OFFLINE</span>
+              </div>
+              <div class="audit-row">
+                <span>Heartbeat:</span>
+                <span class="audit-val" id="net-heartbeat">--</span>
+              </div>
+              <div class="audit-row">
+                <span>Packet Loss:</span>
+                <span class="audit-val" id="net-packet-loss" style="color: #34d399;">0.0%</span>
+              </div>
+            </div>
+
+            <div class="audit-card">
+              <div class="audit-card-title" id="integ-title-3">Actuator & Interlock Relays</div>
+              <div class="audit-row">
+                <span id="integ-act1-label">Sprinkler Solenoid:</span>
+                <span class="audit-val" id="audit-sprinkler">DISARMED</span>
+              </div>
+              <div class="audit-row">
+                <span id="integ-act2-label">Exhaust Vent Relay:</span>
+                <span class="audit-val" id="audit-fan">DISARMED</span>
+              </div>
+              <div class="audit-row">
+                <span>Logic Voltage:</span>
+                <span class="audit-val" style="color: #38bdf8;">5V Relay Interlock</span>
+              </div>
+              <div class="audit-row">
+                <span>Failsafe State:</span>
+                <span class="audit-val" style="color: #34d399;">SECURE</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="log-panel">
+            <div class="audit-card-title" style="margin-bottom: 4px;">Hardware & Connectivity Event Log Stream</div>
+            <div class="log-stream" id="logStream">
+              <div class="log-item">
+                <span class="log-time">[BOOT]</span>
+                <span class="log-event normal">Gateway interface online. Listening on ingress channel...</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SUB VIEW 4: DYNAMIC SENSOR GRAPH -->
+      <div class="sub-view" id="view-graph">
+        <div class="graph-container">
+          <div class="chart-box">
+            <div class="chart-title" id="graph-title-1">Analog Gas / Smoke Sensor Trend</div>
+            <div class="canvas-wrapper">
+              <canvas id="gasChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title" id="graph-title-2">Temperature Rate-of-Rise (°C/s)</div>
+            <div class="canvas-wrapper">
+              <canvas id="rorChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script>
+    // 1. Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('time-display').innerText = `TIME 🕒 ${now.toLocaleTimeString()}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Active Context Tracking
+    let activeHazard = 'fire';
+    let activeSubTab = 'camera';
+
+    const hazardConfig = {
+      fire: {
+        cameraHud: "OPTICAL VALIDATION // MOTION & FLICKER FIRE DETECTOR",
+        integ1: "Fire Node Hardware Health",
+        integBus: "Sensor Bus (MQ-2/DHT11):",
+        integ3: "Suppression Actuators",
+        act1: "Sprinkler Solenoid:",
+        act2: "Exhaust Vent Relay:",
+        chart1: "Analog Gas / Smoke (MQ-2 ppm)",
+        chart2: "Temperature Rate-of-Rise (°C/s)",
+        label1: "MQ-2 Smoke",
+        label2: "Temp RoR (°C/s)",
+        color1: "#ea580c",
+        color2: "#dc2626"
+      },
+      flood: {
+        cameraHud: "SURVEILLANCE OPTICAL FEED // FLOOD LEVEL (CAMERA ONLY)",
+        integ1: "Hydrological Node Health",
+        integBus: "Ultrasonic / Hydro-Bus:",
+        integ3: "Flood Sluice Actuators",
+        act1: "Drainage Sluice Gate:",
+        act2: "Perimeter Siren:",
+        chart1: "Water Depth Proximity (m)",
+        chart2: "Precipitation Rate (mm/h)",
+        label1: "Water Depth (m)",
+        label2: "Precipitation (mm/h)",
+        color1: "#0284c7",
+        color2: "#38bdf8"
+      },
+      pollution: {
+        cameraHud: "SURVEILLANCE OPTICAL FEED // AIR PARTICULATE (CAMERA ONLY)",
+        integ1: "Air Sampling Node Health",
+        integBus: "Laser Dust / Electrochemical:",
+        integ3: "Scrubber Actuators",
+        act1: "Suction Pump Relay:",
+        act2: "Public Alert Display:",
+        chart1: "Particulate Matter PM2.5 (µg/m³)",
+        chart2: "Calculated Local AQI",
+        label1: "PM2.5 (µg/m³)",
+        label2: "Local AQI",
+        color1: "#d97706",
+        color2: "#f59e0b"
+      },
+      industry: {
+        cameraHud: "SURVEILLANCE OPTICAL FEED // VOC PERIMETER (CAMERA ONLY)",
+        integ1: "Toxic Gas Sensor Loop Health",
+        integBus: "LEL / VOC Gas Probe Bus:",
+        integ3: "Emergency Industrial Relays",
+        act1: "Gas Shutoff Valve:",
+        act2: "HVAC Isolation Damper:",
+        chart1: "Toxic Gas Ammonia/VOC (ppm)",
+        chart2: "Combustible LEL Percentage (%)",
+        label1: "VOC / NH3 (ppm)",
+        label2: "LEL Level (%)",
+        color1: "#9333ea",
+        color2: "#c084fc"
+      }
+    };
+
+    // Main Panel Switcher
+    const hazards = ['fire', 'flood', 'pollution', 'industry'];
+    async function switchHazard(hazard) {
+      activeHazard = hazard;
+      hazards.forEach(h => {
+        const btn = document.getElementById(`btn-${h}`);
+        if (h === hazard) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      try {
+        await fetch('/api/camera/context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hazard: hazard })
+        });
+      } catch (err) {
+        console.warn("Failed to notify camera context:", err);
+      }
+
+      const conf = hazardConfig[hazard];
+
+      document.getElementById('camera-hud-title').innerText = conf.cameraHud;
+
+      document.getElementById('integ-title-1').innerText = conf.integ1;
+      document.getElementById('integ-bus-label').innerText = conf.integBus;
+      document.getElementById('integ-title-3').innerText = conf.integ3;
+      document.getElementById('integ-act1-label').innerText = conf.act1;
+      document.getElementById('integ-act2-label').innerText = conf.act2;
+
+      document.getElementById('graph-title-1').innerText = conf.chart1;
+      document.getElementById('graph-title-2').innerText = conf.chart2;
+
+      gasChart.data.datasets[0].label = conf.label1;
+      gasChart.data.datasets[0].borderColor = conf.color1;
+      gasChart.data.datasets[0].data = Array(points).fill(0);
+      gasChart.update('none');
+
+      rorChart.data.datasets[0].label = conf.label2;
+      rorChart.data.datasets[0].borderColor = conf.color2;
+      rorChart.data.datasets[0].data = Array(points).fill(0);
+      rorChart.update('none');
+
+      if (hazard !== 'fire') {
+        document.getElementById('node1-status-tag').innerText = 'STANDBY';
+        document.getElementById('node1-status-tag').className = 'node-tag tag-standby';
+        document.getElementById('node1-metrics').innerText = `Node 01: ${hazard.toUpperCase()} Sensor Array Standby`;
+        document.getElementById('conf-val').innerText = '0%';
+        document.getElementById('raw-conf-val').innerText = '0.0%';
+        document.getElementById('ror-val').innerText = '--';
+        document.getElementById('pattern-val').innerText = 'Standby Deployment Slot';
+
+        document.getElementById('state-normal').className = 'state-box active-normal';
+        document.getElementById('state-alert').className = 'state-box';
+        document.getElementById('state-danger').className = 'state-box';
+      }
+
+      logHardwareEvent(`Switched main panel context to: ${hazard.toUpperCase()}`, 'normal');
+    }
+
+    // Google Maps Dark Integration
+    let googleMap = null;
+    let node1Marker = null;
+    let node2Marker = null;
+    let node1InfoWindow = null;
+
+    function initGoogleMap() {
+      const baseCoords = { lat: 23.2599, lng: 77.4126 };
+
+      googleMap = new google.maps.Map(document.getElementById("spatialMap"), {
+        zoom: 14,
+        center: baseCoords,
+        disableDefaultUI: true,
+        zoomControl: true,
+        styles: [
+          { elementType: "geometry", stylers: [{ color: "#0b111b" }] },
+          { elementType: "labels.text.stroke", stylers: [{ color: "#0b111b" }] },
+          { elementType: "labels.text.fill", stylers: [{ color: "#64748b" }] },
+          {
+            featureType: "administrative.locality",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#94a3b8" }]
+          },
+          {
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{ color: "#162234" }]
+          },
+          {
+            featureType: "road",
+            elementType: "geometry.stroke",
+            stylers: [{ color: "#0d1522" }]
+          },
+          {
+            featureType: "road",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#64748b" }]
+          },
+          {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{ color: "#070b12" }]
+          },
+          {
+            featureType: "water",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#334155" }]
+          }
+        ]
+      });
+
+      node1Marker = new google.maps.Marker({
+        position: baseCoords,
+        map: googleMap,
+        title: "Node 01 (Physical ESP32)",
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 9,
+          fillColor: "#34d399",
+          fillOpacity: 1,
+          strokeWeight: 2,
+          strokeColor: "#ffffff"
+        }
+      });
+
+      node1InfoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="font-family:sans-serif; font-size:12px; color:#0f1724;">
+            <strong>Node 01 (Physical ESP32)</strong><br>
+            Status: <span id="gm-status" style="color:#059669; font-weight:bold;">CONNECTING</span>
+          </div>`
+      });
+
+      node1Marker.addListener("click", () => {
+        node1InfoWindow.open(googleMap, node1Marker);
+      });
+
+      node2Marker = new google.maps.Marker({
+        position: { lat: 23.2680, lng: 77.4200 },
+        map: googleMap,
+        title: "Node 02 (Mesh Expansion)",
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 7,
+          fillColor: "#475569",
+          fillOpacity: 0.8,
+          strokeWeight: 1.5,
+          strokeColor: "#1e293b"
+        }
+      });
+    }
+
+    // Sub Nav Switcher with Canvas & Google Maps Resize
+    const subViews = ['camera', 'map', 'report', 'graph'];
+    function switchSubTab(tab) {
+      activeSubTab = tab;
+      subViews.forEach(t => {
+        const btn = document.getElementById(`sub-${t}`);
+        const view = document.getElementById(`view-${t}`);
+        if (t === tab) {
+          btn.classList.add('active');
+          view.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+          view.classList.remove('active');
+        }
+      });
+
+      if (tab === 'graph') {
+        setTimeout(() => {
+          if (gasChart && rorChart) {
+            gasChart.resize();
+            rorChart.resize();
+          }
+        }, 50);
+      } else if (tab === 'map') {
+        setTimeout(() => {
+          if (googleMap) {
+            google.maps.event.trigger(googleMap, "resize");
+            googleMap.setCenter({ lat: 23.2599, lng: 77.4126 });
+          }
+        }, 50);
+      }
+    }
+
+    function logHardwareEvent(msg, level = 'normal') {
+      const stream = document.getElementById('logStream');
+      const timeStr = new Date().toTimeString().split(' ')[0];
+      const div = document.createElement('div');
+      div.className = 'log-item';
+      div.innerHTML = `<span class="log-time">[${timeStr}]</span><span class="log-event ${level}">${msg}</span>`;
+      stream.prepend(div);
+
+      if (stream.children.length > 35) {
+        stream.removeChild(stream.lastChild);
+      }
+    }
+
+    // Responsive Charts
+    const points = 25;
+    const chartScales = {
+      x: { display: false },
+      y: { grid: { color: '#162234' }, ticks: { color: '#475569', font: { size: 10 } } }
+    };
+
+    const ctxGas = document.getElementById('gasChart').getContext('2d');
+    const gasChart = new Chart(ctxGas, {
+      type: 'line',
+      data: {
+        labels: Array(points).fill(''),
+        datasets: [{
+          label: 'Analog Gas / Smoke (MQ-2 ppm)',
+          data: Array(points).fill(0),
+          borderColor: '#ea580c',
+          borderWidth: 1.5,
+          tension: 0.2,
+          pointRadius: 0
+        }]
+      },
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        scales: chartScales,
+        plugins: {
+          legend: {
+            align: 'end',
+            labels: { color: '#94a3b8', boxWidth: 12, font: { size: 11 } }
+          }
+        }
+      }
+    });
+
+    const ctxRor = document.getElementById('rorChart').getContext('2d');
+    const rorChart = new Chart(ctxRor, {
+      type: 'line',
+      data: {
+        labels: Array(points).fill(''),
+        datasets: [{
+          label: 'Temperature Rate-of-Rise (°C/s)',
+          data: Array(points).fill(0),
+          borderColor: '#dc2626',
+          borderWidth: 1.5,
+          tension: 0.2,
+          pointRadius: 0
+        }]
+      },
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        scales: chartScales,
+        plugins: {
+          legend: {
+            align: 'end',
+            labels: { color: '#94a3b8', boxWidth: 12, font: { size: 11 } }
+          }
+        }
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (gasChart && rorChart) {
+        gasChart.resize();
+        rorChart.resize();
+      }
+      if (googleMap) {
+        google.maps.event.trigger(googleMap, "resize");
+      }
+    });
+
+    // Telemetry Polling (/api/dashboard/live)
+    let lastLoggedState = "";
+    let lastOnlineState = false;
+
+    async function fetchTelemetry() {
+      try {
+        const res = await fetch('/api/dashboard/live');
+        if (!res.ok) return;
+        const d = await res.json();
+
+        const isOnline = d.is_online;
+        const nodeTag = document.getElementById('node1-status-tag');
+        const nodeMetrics = document.getElementById('node1-metrics');
+
+        const hwMcu = document.getElementById('hw-mcu-state');
+        const hwBus = document.getElementById('hw-bus-state');
+        const netLink = document.getElementById('net-link-state');
+        const netHb = document.getElementById('net-heartbeat');
+
+        if (isOnline) {
+          hwMcu.innerText = 'OPERATIONAL (HEALTHY)';
+          hwMcu.style.color = '#34d399';
+          hwBus.innerText = 'ADC/I2C POLLING OK';
+          hwBus.style.color = '#34d399';
+          netLink.innerText = 'CONNECTED (SYNCED)';
+          netLink.style.color = '#34d399';
+          netHb.innerText = 'SYNCED (< 1s)';
+          netHb.style.color = '#34d399';
+
+          if (!lastOnlineState) {
+            logHardwareEvent('Node 01 telemetry handshake synced on ingress bridge.', 'normal');
+            lastOnlineState = true;
+          }
+        } else {
+          hwMcu.innerText = 'STANDBY / SLEEP';
+          hwMcu.style.color = '#64748b';
+          hwBus.innerText = 'NO CARRIER SIGNAL';
+          hwBus.style.color = '#64748b';
+          netLink.innerText = 'DISCONNECTED';
+          netLink.style.color = '#f87171';
+          netHb.innerText = 'TIMEOUT (> 4s)';
+          netHb.style.color = '#f87171';
+
+          if (lastOnlineState) {
+            logHardwareEvent('WARNING: Node 01 telemetry link dropped.', 'alert');
+            lastOnlineState = false;
+          }
+        }
+
+        if (activeHazard === 'fire') {
+          if (isOnline) {
+            nodeTag.innerText = 'ONLINE';
+            nodeTag.className = 'node-tag tag-online';
+            nodeMetrics.innerText = `Temp: ${(d.temp || 0).toFixed(1)}°C | Smoke: ${Math.round(d.smoke || 0)} ppm | Humid: ${(d.humidity || 0).toFixed(0)}%`;
+          } else {
+            nodeTag.innerText = 'OFFLINE';
+            nodeTag.className = 'node-tag tag-offline';
+            nodeMetrics.innerText = 'Temp: --°C | Smoke: -- | Humid: --%';
+          }
+
+          const analysis = d.analysis || {};
+          const conf = analysis.threat_confidence || 0.0;
+          const ror = analysis.temp_rate_of_rise || 0.0;
+
+          document.getElementById('conf-val').innerText = `${Math.round(conf)}%`;
+          document.getElementById('raw-conf-val').innerText = `${conf.toFixed(1)}%`;
+          document.getElementById('ror-val').innerText = `${ror >= 0 ? '+' : ''}${ror.toFixed(2)} °C/s`;
+
+          if (analysis.detected_patterns && analysis.detected_patterns.length > 0) {
+            document.getElementById('pattern-val').innerText = analysis.detected_patterns.join(' + ');
+          }
+
+          const sNormal = document.getElementById('state-normal');
+          const sAlert = document.getElementById('state-alert');
+          const sDanger = document.getElementById('state-danger');
+
+          sNormal.className = 'state-box';
+          sAlert.className = 'state-box';
+          sDanger.className = 'state-box';
+
+          let markerColor = '#34d399';
+          let currentState = "NORMAL";
+
+          if (conf >= 70.0) {
+            sDanger.className = 'state-box active-danger';
+            markerColor = '#ef4444';
+            currentState = "DANGER";
+          } else if (conf >= 40.0) {
+            sAlert.className = 'state-box active-alert';
+            markerColor = '#f59e0b';
+            currentState = "ALERT";
+          } else {
+            sNormal.className = 'state-box active-normal';
+            markerColor = isOnline ? '#34d399' : '#64748b';
+            currentState = "NORMAL";
+          }
+
+          const relays = analysis.relays || {};
+          const sprinklerEl = document.getElementById('audit-sprinkler');
+          const fanEl = document.getElementById('audit-fan');
+
+          if (relays.sprinkler) {
+            sprinklerEl.innerText = 'ENERGIZED (CLOSED CIRCUIT)';
+            sprinklerEl.style.color = '#ef4444';
+          } else {
+            sprinklerEl.innerText = 'DISARMED (NORMAL)';
+            sprinklerEl.style.color = '#34d399';
+          }
+
+          if (relays.exhaust_fan) {
+            fanEl.innerText = 'ENERGIZED (VENT ACTIVE)';
+            fanEl.style.color = '#f59e0b';
+          } else {
+            fanEl.innerText = 'DISARMED (NORMAL)';
+            fanEl.style.color = '#34d399';
+          }
+
+          if (currentState !== lastLoggedState) {
+            if (currentState === "DANGER") {
+              logHardwareEvent(`CRITICAL FIRE CONFIRMED: Solenoid relay activated. RoR: ${ror.toFixed(2)} °C/s`, 'danger');
+            } else if (currentState === "ALERT") {
+              logHardwareEvent(`ELEVATED RISK: Exhaust relay energized.`, 'alert');
+            } else if (lastLoggedState !== "") {
+              logHardwareEvent(`Hazard mitigated. Relays returned to normal state.`, 'normal');
+            }
+            lastLoggedState = currentState;
+          }
+
+          // Sync Google Maps Marker & InfoWindow
+          if (node1Marker && typeof google !== "undefined") {
+            node1Marker.setIcon({
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 9,
+              fillColor: markerColor,
+              fillOpacity: 1,
+              strokeWeight: 2,
+              strokeColor: "#ffffff"
+            });
+
+            if (node1InfoWindow) {
+              node1InfoWindow.setContent(`
+                <div style="font-family:sans-serif; font-size:12px; color:#0f1724; line-height:1.4;">
+                  <strong style="color:#0284c7;">Node 01 (Physical ESP32)</strong><br>
+                  Status: <strong style="color:${markerColor};">${isOnline ? 'ONLINE' : 'OFFLINE'}</strong><br>
+                  Temp: <strong>${(d.temp || 0).toFixed(1)}°C</strong> | Smoke: <strong>${Math.round(d.smoke || 0)} ppm</strong><br>
+                  Confidence: <strong>${Math.round(conf)}%</strong>
+                </div>
+              `);
+            }
+          }
+
+          // Push Live Telemetry to Charts
+          if (isOnline) {
+            gasChart.data.datasets[0].data.shift();
+            gasChart.data.datasets[0].data.push(d.smoke || 0);
+            gasChart.update('none');
+
+            rorChart.data.datasets[0].data.shift();
+            rorChart.data.datasets[0].data.push(ror || 0);
+            rorChart.update('none');
+          }
+        }
+      } catch (err) {
+        // Quiet fail
+      }
+    }
+
+    setInterval(fetchTelemetry, 1000);
+  </script>
+</body>
+</html>

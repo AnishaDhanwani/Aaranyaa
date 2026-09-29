@@ -1,0 +1,25 @@
+python -m uvicorn backend.main:app --reload --port 8000
+
+python ingestion\firebase_receiver.py
+
+http://localhost:8000/dashboard
+
+
+Set-ExecutionPolicy Unrestricted -Scope Process
+
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+venv\Scripts\Activate.ps1
+
+
+qwert
+
+venv\Scripts\Activate.ps1
+
+python -m uvicorn backend.main:app --reload --port 8000
+
+
+
+chang2
+
+Set-ExecutionPolicy Unrestricted -Scope Process
+venv\Scripts\Activate.ps1
